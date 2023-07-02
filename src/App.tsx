@@ -1,42 +1,12 @@
 import { useEffect, useState } from 'react';
-import { task, Task, TaskContainer } from './components/Task/Index'
-// DragDrop Part
-import { DragDropContext } from 'react-beautiful-dnd'
+import { Task, TaskContainer } from './components/Task/Index'
+import { taskStack } from './types'
+import { getTasks } from './service/api'
+import { moveTask, splitByStatus } from './utils'
 import Title from 'antd/es/typography/Title';
 
-// TODO move it to a util or service layer
-async function getTasks(): Promise<task[]> {
-  const apiUrl = "https://5da4daf857f48b0014fba3e4.mockapi.io/v1/task"
-  const response = await fetch(apiUrl);
-  const jsonData: task[] = await response.json();
-  return jsonData;
-}
-
-// TODO temporary interface, it must be done in the api
-interface taskStack {
-  todo: task[],
-  inprogres: task[],
-  review: task[],
-  done: task[]
-}
-
-// TODO temporary function, it must be done in the api
-function splitByStatus(list: task[]) {
-  const stacks: taskStack = {
-    todo: [],
-    inprogres: [],
-    review: [],
-    done: []
-  }
-
-  list.forEach(tdata => {
-    const state = tdata.state
-    if (stacks[state as keyof taskStack]) {
-      stacks[state as keyof taskStack].push(tdata)
-    }
-  })
-  return stacks
-}
+// DragDrop Part
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 
 function App() {
   const [stacks, setStaks] = useState<taskStack>()
@@ -50,40 +20,46 @@ function App() {
     })
   }, [])
 
-  ondragend = result => {
-    console.log(result)
+  function handleDragEnd(event: DragEndEvent) {
+    const { over, active } = event;
+
+    if (over?.id && active?.id && stacks) {
+      const virtStack: taskStack = { ...stacks }
+      const taskId = active.id as string;
+      const targetStack: keyof taskStack = over.id as keyof taskStack
+      moveTask(virtStack, targetStack, taskId)
+      setStaks(virtStack)
+    }
   }
 
   return (
     <>
-      <main className="min-h-screen min-w-screen">
+      <main className="container mx-auto px-4">
         <Title className='text-center mt-2'>Kanbam</Title>
-        <DragDropContext onDragEnd={ondragend}>
-          <section className='flex w-full gap-4 ml-4 mr-4'>
-            <TaskContainer title={'Todo'} loading={loading}>
+        <section className='flex w-full gap-4 ml-4 mr-4'>
+          <DndContext onDragEnd={handleDragEnd}>
+            <TaskContainer id={'todo'} title={'Todo'} loading={loading}>
               {stacks?.todo?.map(tdata =>
-                <Task {...tdata} />
+                <Task {...tdata} key={tdata.id} />
               )}
             </TaskContainer>
-            <TaskContainer title={'In Progress'} loading={loading}>
+            <TaskContainer id={'inprogres'} title={'In Progress'} loading={loading}>
               {stacks?.inprogres?.map(tdata =>
-                <Task {...tdata} />
+                <Task {...tdata} key={tdata.id} />
               )}
             </TaskContainer>
-            <TaskContainer title={'In Review'} loading={loading}>
+            <TaskContainer id={'review'} title={'In Review'} loading={loading}>
               {stacks?.review?.map(tdata =>
-
-                <Task {...tdata} />
-
+                <Task {...tdata} key={tdata.id} />
               )}
             </TaskContainer>
-            <TaskContainer title={'Done'} loading={loading}>
-              {stacks?.done?.map(tdata =>
-                <Task {...tdata} />
+            <TaskContainer id={'done'} title={'Done'} loading={loading}>
+              {stacks?.done?.map((tdata) =>
+                <Task {...tdata} key={tdata.id} />
               )}
             </TaskContainer>
-          </section>
-        </DragDropContext>
+          </DndContext>
+        </section>
       </main>
     </>
   )
