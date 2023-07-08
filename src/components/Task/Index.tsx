@@ -3,6 +3,8 @@ import Meta from 'antd/es/card/Meta'
 import { task, taskContainer } from '../../types'
 import { useDroppable } from '@dnd-kit/core';
 import { useDraggable } from '@dnd-kit/core';
+import {CSS} from '@dnd-kit/utilities';
+import { useSortable } from '@dnd-kit/sortable';
 
 export function TaskContainer({ id, title, children, loading }: taskContainer) {
 
@@ -24,13 +26,20 @@ export function TaskContainer({ id, title, children, loading }: taskContainer) {
 }
 
 export function Task({ title, description, id }: task) {
+  const {
+    attributes,
+    isDragging,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({id: id});
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: id,
-  });
-
+  
   const style = transform ? {
+    // transform: CSS.Transform.toString(transform),
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    transition,
     zIndex: 9999,
   } : { position: 'relative' };
 
