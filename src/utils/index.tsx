@@ -1,3 +1,4 @@
+import { arrayMove } from '@dnd-kit/sortable'
 import { task, taskStack } from '../types'
 
 
@@ -18,32 +19,44 @@ export function splitByStatus(list: task[]) {
 	return stacks
 }
 
-export function moveTask(
-	stacks: taskStack,
-	targetStack: keyof taskStack,
-	taskId: string
-) {
-	let sourceStack: keyof taskStack | undefined;
-
-	console.log(stacks, targetStack, taskId)
-
-	for (const stackName in stacks) {
-
-		const stack = stacks[stackName as keyof taskStack];
-		const taskIndex = stack.findIndex(task => task.id === taskId);
-
-		if (taskIndex !== -1) {
-			sourceStack = stackName as keyof taskStack;
-			const [removedItem] = stack.splice(taskIndex, 1);
-			removedItem.state = targetStack;
-			stacks[targetStack].push(removedItem);
-			break;
+// Retorna key de uma lista da lista que contém task
+export function findListKey(stacks: taskStack, id: string) {
+	for (const key in stacks) {
+		const item = stacks[key as keyof taskStack].find((item: task) => item.id === id);
+		if (item) {
+			return key as keyof taskStack;
 		}
 	}
+}
 
-	if (!sourceStack) {
-		console.error('Item not found');
+export function moveTask(
+	taskStack: taskStack,
+	target: string | number,
+	taskId: string | number
+) {
+
+	const activeStackKey = findListKey(taskStack, taskId as string)
+
+	if (!activeStackKey) return
+
+	const currentIndex = taskStack[activeStackKey].findIndex((task: task) => task.id === taskId);
+
+	if (Number(target) && Number(target)) {
+		// Dropped between tasks
+		const nextStack = findListKey(taskStack, target as string)
+
+		if (nextStack) {
+			const nextIndex = taskStack[nextStack].findIndex((task: task) => task.id === target);
+			const [task] = taskStack[activeStackKey].splice(currentIndex, 1);
+			taskStack[nextStack].splice(nextIndex, 0, task)
+		}
+
+	} else {
+		// dropped in a container
+		const currentIndex = taskStack[activeStackKey].findIndex((task: task) => task.id === taskId);
+		const [task] = taskStack[activeStackKey].splice(currentIndex, 1);
+		taskStack[target as keyof taskStack].push(task)
 	}
-
-	return stacks;
+	
+	return taskStack
 }

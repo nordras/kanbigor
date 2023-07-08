@@ -12,7 +12,8 @@ export interface task {
   title: string
   description: string
   state: string
-  index: number
+  index?: number
+  handleDelete?: (id: string) => void
 }
 
 export interface taskContainer {

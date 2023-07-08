@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Task, TaskContainer } from './components/Task/Index'
 import { task, taskStack } from './types'
-import { getTasks } from './service/api'
+import { deleteTask, getTasks, postTask } from './service/api'
 import { moveTask, splitByStatus } from './utils'
 import Title from 'antd/es/typography/Title';
 // import Experiment from './components/Experiment'
@@ -20,28 +20,33 @@ import {
 // DragSortable
 import {
   SortableContext,
+  horizontalListSortingStrategy,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import AddTaskModal from './components/AddTask';
 
 
 
 function App() {
   const ini: taskStack = { todo: [], inprogres: [], review: [], done: [] }
-  const [stacks, setStaks] = useState<taskStack>(ini)
-  const [plain, setPlain] = useState<task[]>([])
+  const [stacks, setStacks] = useState<taskStack>(ini)
   const [loading, setLoading] = useState<boolean>(true)
   const strategy = verticalListSortingStrategy
 
+  const fetchTasks = async () => {
+    try {
+      const result = await getTasks();
+      setStacks(splitByStatus(result));
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setLoading(false);
+    }
+  }
+  
   useEffect(() => {
-    getTasks().then(result => {
-      setPlain(result)
-      setLoading(false)
-    })
+    fetchTasks();
   }, [])
-
-  useEffect(() => {
-    setStaks(splitByStatus([...plain]))
-  }, plain)
 
   const containers = useMemo(() => Object.keys(stacks), [stacks])
 
@@ -54,8 +59,6 @@ function App() {
 
   function handleDragEnd(event: DragEndEvent) {
     const { over, active } = event;
-    console.log(`active.id: ${active.id} over?.id: ${over?.id}`)
-
     // if same id
     if (over?.id === active?.id) return
 
@@ -65,8 +68,20 @@ function App() {
       const taskId = active.id;
 
       moveTask(virtStack, target, taskId)
-      setStaks(virtStack)
+      setStacks(virtStack)
     }
+  }
+
+  // Delete a task
+  function addTask(task: task) {
+    const data = {...task}
+    postTask(data)
+    fetchTasks()
+  }
+
+  function removeTask(id: string) {
+    deleteTask(id)
+    fetchTasks()
   }
 
   return (
@@ -75,11 +90,12 @@ function App() {
         <Title className='text-center mt-2'>Kanbam</Title>
         <section className='flex w-full gap-4 ml-4 mr-4'>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={containers} strategy={strategy} >
+            <SortableContext items={containers} strategy={horizontalListSortingStrategy} >
+
               <TaskContainer id={'todo'} title={'Todo'} loading={loading}>
-                <SortableContext items={stacks.todo} strategy={strategy} >
+                <SortableContext items={stacks.todo} strategy={verticalListSortingStrategy} >
                   {stacks.todo?.map(tdata =>
-                    <Task {...tdata} id={tdata.id} key={tdata.id} />
+                    <Task {...tdata} key={tdata.id} handleDelete={removeTask} />
                   )}
                 </SortableContext>
               </TaskContainer>
@@ -87,7 +103,7 @@ function App() {
               <TaskContainer id={'inprogres'} title={'In progress'} loading={loading}>
                 <SortableContext items={stacks.inprogres} strategy={strategy} >
                   {stacks.inprogres?.map(tdata =>
-                    <Task {...tdata} id={tdata.id} key={tdata.id} />
+                    <Task {...tdata} key={tdata.id} />
                   )}
                 </SortableContext>
               </TaskContainer>
@@ -95,7 +111,7 @@ function App() {
               <TaskContainer id={'review'} title={'In Review'} loading={loading}>
                 <SortableContext items={stacks.review} strategy={strategy} >
                   {stacks.review?.map(tdata =>
-                    <Task {...tdata} id={tdata.id} key={tdata.id} />
+                    <Task {...tdata} key={tdata.id} />
                   )}
                 </SortableContext>
               </TaskContainer>
@@ -110,6 +126,9 @@ function App() {
 
             </SortableContext>
           </DndContext>
+        </section>
+        <section className='flex w-full gap-4 m-4 mb-12'>
+          <AddTaskModal onTaskAdd={(task) => addTask(task)} />
         </section>
       </main>
     </>

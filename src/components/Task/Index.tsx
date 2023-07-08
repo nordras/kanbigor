@@ -2,9 +2,10 @@ import { Card, Skeleton } from 'antd'
 import Meta from 'antd/es/card/Meta'
 import { task, taskContainer } from '../../types'
 import { useDroppable } from '@dnd-kit/core';
-import { useDraggable } from '@dnd-kit/core';
-import {CSS} from '@dnd-kit/utilities';
+// import { useDraggable } from '@dnd-kit/core';
+// import {CSS} from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
+import { deleteTask } from '../../service/api';
 
 export function TaskContainer({ id, title, children, loading }: taskContainer) {
 
@@ -25,7 +26,7 @@ export function TaskContainer({ id, title, children, loading }: taskContainer) {
   )
 }
 
-export function Task({ title, description, id }: task) {
+export function Task({ title, description, id, handleDelete }: task ) {
   const {
     attributes,
     isDragging,
@@ -35,17 +36,22 @@ export function Task({ title, description, id }: task) {
     transition,
   } = useSortable({id: id});
 
-  
+  const btnSt = 'bg-red-400 hover:bg-red-500 text-white font-bold py-1 px-2 rounded mt-4'
   const style = transform ? {
-    // transform: CSS.Transform.toString(transform),
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
     transition,
     zIndex: 9999,
   } : { position: 'relative' };
 
+  function deleteTask() {
+    if (handleDelete)
+      handleDelete(id);
+  }
+
   return (
     <Card ref={setNodeRef} key={id} title={title} className={`cursor-pointer mb-2 ${isDragging ? 'z-1': 'z-0'}` } style={style} {...listeners} {...attributes}>
       <article>{description}</article>
+      <button className={btnSt} onClick={deleteTask}>⌫</button>
     </Card>
   )
 }
