@@ -1,111 +1,114 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Task, TaskContainer } from './components/Task/Index'
 import { task, taskStack } from './types'
 import { getTasks } from './service/api'
 import { moveTask, splitByStatus } from './utils'
 import Title from 'antd/es/typography/Title';
-import Experiment from './components/Experiment'
+// import Experiment from './components/Experiment'
+
 // DragDrop Part
 import {
-  DndContext, 
+  DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
+  MouseSensor,
+  TouchSensor
 } from '@dnd-kit/core';
 // DragSortable
 import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
 
 
 function App() {
-  const ini: taskStack = {todo: [], inprogres: [], review: [], done: []}
+  const ini: taskStack = { todo: [], inprogres: [], review: [], done: [] }
   const [stacks, setStaks] = useState<taskStack>(ini)
   const [plain, setPlain] = useState<task[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const strategy = verticalListSortingStrategy
 
   useEffect(() => {
     getTasks().then(result => {
       setPlain(result)
-      const data = splitByStatus(result)
       setLoading(false)
-      setStaks(data)
     })
   }, [])
 
-  function handleDragEnd(event: { active: any; over: any; }) {
-    const {active, over} = event;
-    
-    if (active.id !== over.id) {
-      setPlain((plain) => {
-        const oldIndex = plain.findIndex(task => task.id === active.id);
-        const newIndex = plain.findIndex(task => task.id === over.id);
-        
-        return arrayMove(plain, oldIndex, newIndex);
-      });
-    }
-  }
+  useEffect(() => {
+    setStaks(splitByStatus([...plain]))
+  }, plain)
 
-  // function handleDragEnd(event: DragEndEvent) {
-  //   console.log(event)    
-  //   const { over, active } = event;
-  //   if (over?.id && active?.id && stacks) {
-  //     const virtStack: taskStack = { ...stacks }
-  //     const taskId = active.id as string;
-  //     const targetStack: keyof taskStack = over.id as keyof taskStack
-  //     moveTask(virtStack, targetStack, taskId)
-  //     setStaks(virtStack)
-  //   }
-  // }
+  const containers = useMemo(() => Object.keys(stacks), [stacks])
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(MouseSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor)
   );
+
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { over, active } = event;
+    console.log(`active.id: ${active.id} over?.id: ${over?.id}`)
+
+    // if same id
+    if (over?.id === active?.id) return
+
+    if (over?.id && active?.id && stacks) {
+      const virtStack: taskStack = { ...stacks }
+      const target = over.id
+      const taskId = active.id;
+
+      moveTask(virtStack, target, taskId)
+      setStaks(virtStack)
+    }
+  }
 
   return (
     <>
       <main className="container mx-auto px-4">
         <Title className='text-center mt-2'>Kanbam</Title>
-        <Experiment />
         <section className='flex w-full gap-4 ml-4 mr-4'>
-          <DndContext sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}>
-            <SortableContext
-              items={plain}
-              strategy={verticalListSortingStrategy}
-            >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={containers} strategy={strategy} >
               <TaskContainer id={'todo'} title={'Todo'} loading={loading}>
-                {plain?.map(tdata =>
-                  <Task {...tdata} id={tdata.id} key={tdata.id} />
-                )}
+                <SortableContext items={stacks.todo} strategy={strategy} >
+                  {stacks.todo?.map(tdata =>
+                    <Task {...tdata} id={tdata.id} key={tdata.id} />
+                  )}
+                </SortableContext>
               </TaskContainer>
+
+              <TaskContainer id={'inprogres'} title={'In progress'} loading={loading}>
+                <SortableContext items={stacks.inprogres} strategy={strategy} >
+                  {stacks.inprogres?.map(tdata =>
+                    <Task {...tdata} id={tdata.id} key={tdata.id} />
+                  )}
+                </SortableContext>
+              </TaskContainer>
+
+              <TaskContainer id={'review'} title={'In Review'} loading={loading}>
+                <SortableContext items={stacks.review} strategy={strategy} >
+                  {stacks.review?.map(tdata =>
+                    <Task {...tdata} id={tdata.id} key={tdata.id} />
+                  )}
+                </SortableContext>
+              </TaskContainer>
+
+              <TaskContainer id={'done'} title={'Done'} loading={loading}>
+                <SortableContext items={stacks.done} strategy={strategy} >
+                  {stacks.done?.map(tdata =>
+                    <Task {...tdata} id={tdata.id} key={tdata.id} />
+                  )}
+                </SortableContext>
+              </TaskContainer>
+
             </SortableContext>
-            {/* <TaskContainer id={'inprogres'} title={'In Progress'} loading={loading}>
-              {stacks?.inprogres?.map(tdata =>
-                <Task {...tdata} key={tdata.id} />
-              )}
-            </TaskContainer>
-            <TaskContainer id={'review'} title={'In Review'} loading={loading}>
-              {stacks?.review?.map(tdata =>
-                <Task {...tdata} key={tdata.id} />
-              )}
-            </TaskContainer>
-            <TaskContainer id={'done'} title={'Done'} loading={loading}>
-              {stacks?.done?.map((tdata) =>
-                <Task {...tdata} key={tdata.id} />
-              )}
-            </TaskContainer> */}
           </DndContext>
         </section>
       </main>
