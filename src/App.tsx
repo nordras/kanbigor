@@ -18,7 +18,7 @@ function App() {
   const [draggedOverTask, setDraggedOverTask] = useState<String | null>(null);
   const [draggedStackedId, setDraggedStackedId] = useState<String | null>(null);
 
-  const [nextStack, setNextStack] = useState<String | null>(null);
+  const [nextStackKey, setNextStack] = useState<String | null>(null);
 
   // Drag and drop Functions
   const handleDragStart = (taskId: string, stackKey: keyof taskStack, index: number) => {
@@ -65,14 +65,7 @@ function App() {
 
       const [movedStack] = stack.splice(currentIndex as number, 1);
 
-      let nextStack;
-
-      if (Number(nextStackID)) {
-        const key = findListKey(virtStack, nextStackID as string)
-        nextStack = virtStack[key as keyof taskStack]
-      } else {
-        nextStack = virtStack[nextStackID as keyof taskStack]
-      }
+      const nextStack = virtStack[nextStackKey as keyof taskStack]
 
       if (!movedStack) return
 
