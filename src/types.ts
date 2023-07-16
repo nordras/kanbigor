@@ -14,6 +14,11 @@ export interface task {
   state: string
   index?: number
   handleDelete?: (id: string) => void
+  onDragEnter?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragLeave?: () => void;
+  onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragStart?: (event: React.DragEvent<HTMLDivElement>) => void;
 }
 
 export interface taskContainer {
@@ -21,4 +26,8 @@ export interface taskContainer {
   title: string
   children?: ReactNode
   loading: boolean
+  onDragEnter?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDragLeave?: () => void;
+  onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
 }

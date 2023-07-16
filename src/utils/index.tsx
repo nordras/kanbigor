@@ -42,6 +42,7 @@ export function moveTask(
 	const currentIndex = taskStack[activeStackKey].findIndex((task: task) => task.id === taskId);
 
 	if (Number(target) && Number(target)) {
+
 		// Dropped between tasks
 		const nextStack = findListKey(taskStack, target as string)
 
@@ -57,6 +58,42 @@ export function moveTask(
 		const [task] = taskStack[activeStackKey].splice(currentIndex, 1);
 		taskStack[target as keyof taskStack].push(task)
 	}
-	
+
 	return taskStack
+}
+
+// MoveTask usage example
+// function handleDragEnd(event: any) {
+//   const { over, active } = event;
+//   // if same id
+//   if (over?.id === active?.id) return
+
+//   if (over?.id && active?.id && stacks) {
+//     const virtStack: taskStack = { ...stacks }
+//     const target = over.id
+//     const taskId = active.id;
+
+//     moveTask(virtStack, target, taskId)
+//     setStacks(virtStack)
+//   }
+// }
+
+
+export function formatCamelCase(camelCaseString: string): string {
+
+	// TODO change object inprogress to camel case
+	if (camelCaseString === 'inprogres') {
+		return 'In Progress';
+	}
+
+	const separatedWords = camelCaseString
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
+
+	const formattedString = separatedWords
+		.split(' ')
+		.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+
+	return formattedString;
 }

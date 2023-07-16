@@ -1,28 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Task, TaskContainer } from './components/Task/Index'
 import { task, taskStack } from './types'
 import { deleteTask, getTasks, postTask } from './service/api'
-import { moveTask, splitByStatus } from './utils'
+import { findListKey, formatCamelCase, splitByStatus } from './utils'
 import Title from 'antd/es/typography/Title';
-// import Experiment from './components/Experiment'
-
-// DragDrop Part
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  MouseSensor,
-  TouchSensor
-} from '@dnd-kit/core';
-// DragSortable
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import AddTaskModal from './components/AddTask';
 
 
@@ -31,11 +12,94 @@ function App() {
   const ini: taskStack = { todo: [], inprogres: [], review: [], done: [] }
   const [stacks, setStacks] = useState<taskStack>(ini)
   const [loading, setLoading] = useState<boolean>(true)
-  const strategy = verticalListSortingStrategy
 
+  const [draggedTask, setDraggedTask] = useState<String | null>(null);
+  const [draggedTaskIndex, setDraggedTaskIndex] = useState<number | null>(null);
+  const [draggedOverTask, setDraggedOverTask] = useState<String | null>(null);
+  const [draggedStackedId, setDraggedStackedId] = useState<String | null>(null);
+
+  const [nextStack, setNextStack] = useState<String | null>(null);
+
+  // Drag and drop Functions
+  const handleDragStart = (taskId: string, stackKey: keyof taskStack, index: number) => {
+    console.log('dragStart', taskId, stackKey)
+    setDraggedTaskIndex(index);
+    setDraggedTask(taskId);
+    setDraggedStackedId(stackKey);
+  };
+
+  const handleDragEnter = (event: React.DragEvent<HTMLDivElement>, overTaskId: string | null) => {
+    event.stopPropagation()
+    console.log('handleDragEnterEvent over task', overTaskId)
+    if (draggedTask && draggedTask !== overTaskId) {
+      setDraggedOverTask(overTaskId);
+    }
+  };
+
+  const handleDragLeave = () => {
+    console.log('handleDragLeave')
+    setDraggedOverTask(null);
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>, key: string) => {
+    event.preventDefault();
+    setNextStack(key)
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>, nextStackID: string) => {
+    // Is being dragged to the same stack
+    if (!draggedTask && !draggedStackedId) return
+
+    const virtStack: taskStack = { ...stacks }
+
+    // Is being Dragged to a different column
+    if (nextStackID !== draggedStackedId) {
+
+      const stack = virtStack[draggedStackedId as keyof taskStack]
+      const currentIndex = draggedTaskIndex
+
+      if (currentIndex === undefined) {
+        console.error(currentIndex, event)
+        return
+      }
+
+      const [movedStack] = stack.splice(currentIndex as number, 1);
+
+      let nextStack;
+
+      if (Number(nextStackID)) {
+        const key = findListKey(virtStack, nextStackID as string)
+        nextStack = virtStack[key as keyof taskStack]
+      } else {
+        nextStack = virtStack[nextStackID as keyof taskStack]
+      }
+
+      if (!movedStack) return
+
+      // Drooped over a task
+      if (draggedOverTask) {
+        const nextIndex = nextStack.findIndex((task: task) => task.id === draggedOverTask);
+        nextStack.splice(nextIndex, 0, movedStack)
+        setStacks(virtStack)
+      } else {
+        nextStack.push(movedStack)
+        console.log(nextStack)
+        setStacks(virtStack)
+      }
+    }
+
+
+    setDraggedTask(null)
+    setDraggedOverTask(null)
+    setDraggedStackedId(null)
+
+  };
+
+  // End Drag and drop Functions
   const fetchTasks = async () => {
     try {
       const result = await getTasks();
+      setStacks(ini);
       setStacks(splitByStatus(result));
       setLoading(false);
     } catch (error) {
@@ -43,38 +107,16 @@ function App() {
       setLoading(false);
     }
   }
-  
+
   useEffect(() => {
     fetchTasks();
   }, [])
 
   const containers = useMemo(() => Object.keys(stacks), [stacks])
 
-  const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor)
-  );
-
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { over, active } = event;
-    // if same id
-    if (over?.id === active?.id) return
-
-    if (over?.id && active?.id && stacks) {
-      const virtStack: taskStack = { ...stacks }
-      const target = over.id
-      const taskId = active.id;
-
-      moveTask(virtStack, target, taskId)
-      setStacks(virtStack)
-    }
-  }
-
   // Delete a task
   function addTask(task: task) {
-    const data = {...task}
+    const data = { ...task }
     postTask(data)
     fetchTasks()
   }
@@ -89,43 +131,32 @@ function App() {
       <main className="container mx-auto px-4">
         <Title className='text-center mt-2'>Kanbam</Title>
         <section className='flex w-full gap-4 ml-4 mr-4'>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={containers} strategy={horizontalListSortingStrategy} >
-
-              <TaskContainer id={'todo'} title={'Todo'} loading={loading}>
-                <SortableContext items={stacks.todo} strategy={verticalListSortingStrategy} >
-                  {stacks.todo?.map(tdata =>
-                    <Task {...tdata} key={tdata.id} handleDelete={removeTask} />
-                  )}
-                </SortableContext>
+          {
+            containers.map((key) => (
+              <TaskContainer
+                key={`container-${key}`}
+                id={key}
+                title={formatCamelCase(key)}
+                loading={loading}
+                // onDragEnter={() => handleDragEnter(null)}
+                onDragOver={(event) => handleDragOver(event, key)}
+                onDragLeave={handleDragLeave}
+                onDrop={(event) => handleDrop(event, key)}
+              >
+                {stacks[key as keyof taskStack].map((tdata, index) =>
+                (tdata && <Task
+                  {...tdata}
+                  key={tdata?.id}
+                  onDrop={(event) => handleDrop(event, tdata.id)}
+                  onDragEnter={(event) => handleDragEnter(event, tdata.id)}
+                  onDragStart={() => handleDragStart(tdata.id, key as keyof taskStack, index)}
+                  handleDelete={removeTask}
+                />)
+                )}
               </TaskContainer>
+            ))
+          }
 
-              <TaskContainer id={'inprogres'} title={'In progress'} loading={loading}>
-                <SortableContext items={stacks.inprogres} strategy={strategy} >
-                  {stacks.inprogres?.map(tdata =>
-                    <Task {...tdata} key={tdata.id} />
-                  )}
-                </SortableContext>
-              </TaskContainer>
-
-              <TaskContainer id={'review'} title={'In Review'} loading={loading}>
-                <SortableContext items={stacks.review} strategy={strategy} >
-                  {stacks.review?.map(tdata =>
-                    <Task {...tdata} key={tdata.id} />
-                  )}
-                </SortableContext>
-              </TaskContainer>
-
-              <TaskContainer id={'done'} title={'Done'} loading={loading}>
-                <SortableContext items={stacks.done} strategy={strategy} >
-                  {stacks.done?.map(tdata =>
-                    <Task {...tdata} id={tdata.id} key={tdata.id} />
-                  )}
-                </SortableContext>
-              </TaskContainer>
-
-            </SortableContext>
-          </DndContext>
         </section>
         <section className='flex w-full gap-4 m-4 mb-12'>
           <AddTaskModal onTaskAdd={(task) => addTask(task)} />
