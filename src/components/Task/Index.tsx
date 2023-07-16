@@ -30,20 +30,7 @@ export function TaskContainer(props: taskContainer) {
 
 export function Task(props: task) {
   const { title, description, id, handleDelete } = props
-  // const {
-  //   attributes,
-  //   isDragging,
-  //   listeners,
-  //   setNodeRef,
-  //   transform,
-  //   transition,
-  // } = useSortable({id: id});
 
-  // const style = transform ? {
-  //   transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  //   transition,
-  //   zIndex: 9999,
-  // } : { position: 'relative' };
   const btnSt = 'bg-red-400 z-999 hover:bg-red-500 text-white font-bold py-1 px-2 rounded mt-4'
 
   function deleteTask() {
@@ -51,18 +38,13 @@ export function Task(props: task) {
       handleDelete(id);
   }
 
-
-
-  // ref={setNodeRef} 
-  // ${isDragging ? 'z-1': 'z-0'}
-
   // Drag and Drop Properties
   const {
     onDragStart,
     onDragEnter,
     onDragOver,
     onDragLeave,
-    onDrop } = props
+  } = props
 
   return (
     <Card
@@ -73,7 +55,6 @@ export function Task(props: task) {
       onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
-      onDrop={onDrop}
       onDragStart={onDragStart}
     >
       <article>{description}</article>
