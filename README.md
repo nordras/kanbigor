@@ -1,4 +1,3 @@
 # kanbigor
 
-Remover libs de drag and drop
-storybook
+Fazer um skeleton para onde o task ira ser dropado
