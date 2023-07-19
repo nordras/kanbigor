@@ -20,7 +20,7 @@ function App() {
 
   const [dragged, setDragged] = useState<Dragged | null>(null);
   const [draggedOver, setDraggedOver] = useState<Dragged | null>(null);
-  const [nextStackKey, setNextStackKey] = useState<String | null | undefined>(null);
+  const [nextStackKey, setNextStackKey] = useState<String | null>(null);
 
   // Drag and drop Functions
   const handleDragStart = (stackKey: string, task: task, index: number) => {
@@ -52,26 +52,27 @@ function App() {
     }
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
+  const handleDrop = (dragged: Dragged | null, draggedOver: Dragged | null, nextStackKey: string | null | undefined, stacks: taskStack): taskStack => {
+
+    // Clone original stacks to avoid mutation
+    let clonedStacks: taskStack = JSON.parse(JSON.stringify(stacks));
+
+    if (!dragged) return clonedStacks;
 
     // Is being dropped to the same stack
-    if ((dragged?.task?.id === draggedOver?.task?.id)) return
+    if (dragged?.task?.id === draggedOver?.task?.id) return clonedStacks;
 
-    const inOtherColumn = dragged?.stackKey !== nextStackKey
+    const inOtherColumn = dragged?.stackKey !== nextStackKey;
 
     // Stacks
-    const virtStack: taskStack = { ...stacks }
-
-    // keys
-    const currentStack = virtStack[dragged?.stackKey as keyof taskStack]
-    const nextStack = virtStack[nextStackKey as keyof taskStack]
+    const currentStack = clonedStacks[dragged?.stackKey as keyof taskStack];
+    const nextStack = clonedStacks[nextStackKey as keyof taskStack];
 
     // Is being Dragged to a different column
     if (inOtherColumn && !draggedOver?.task) {
       console.log('in other column')
       currentStack.splice(dragged?.index as number, 1)
-      nextStack.push(dragged?.task as task)
+      nextStack.push(dragged?.task as task);
     }
 
     // Is being Dragged to a different column and Task
@@ -86,10 +87,7 @@ function App() {
       nextStack.splice(draggedOver?.index as number, 0, dragged?.task as task);
     }
 
-    setStacks(virtStack)
-    setNextStackKey(null)
-    setDragged(null)
-    setDraggedOver(null)
+    return clonedStacks;
   };
 
   // End Drag and drop Functions
@@ -134,9 +132,16 @@ function App() {
                 id={key}
                 title={formatCamelCase(key)}
                 loading={loading}
-                nextStackKey={nextStackKey as string | undefined}
+                nextStackKey={nextStackKey}
                 onDragOver={(event) => handleDragOver(event, key)}
-                onDrop={(event) => handleDrop(event)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const newStacks = handleDrop(dragged, draggedOver, nextStackKey, stacks);
+                  setStacks(newStacks);
+                  setNextStackKey(null);
+                  setDragged(null);
+                  setDraggedOver(null);
+                }}
               >
                 {stacks[key as keyof taskStack].map((tdata, index) => {
                   const isDraggedOverHere = draggedOver && draggedOver.stackKey === key && draggedOver.index === index;

@@ -20,7 +20,7 @@ export function TaskContainer(props: taskContainer) {
   console.log(`${id} - ${nextStackKey}`)
 
   const shouldLoadSkeleton = id === nextStackKey && React.Children.count(children) === 0;
-  const shouldLoadSkeletonAfterChildren = id === nextStackKey && React.Children.count(children) !== 0
+  // const shouldLoadSkeleton = id === nextStackKey;
   return (
     <section id={id} className={classes}
       onDragEnter={onDragEnter}
@@ -29,7 +29,7 @@ export function TaskContainer(props: taskContainer) {
       onDrop={onDrop}>
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
       {children}
-      {(loading || shouldLoadSkeletonAfterChildren || shouldLoadSkeleton) && <LoadingTask loading={true} />}
+      {(loading || shouldLoadSkeleton) && <LoadingTask loading={true} />}
 
     </section>
   )

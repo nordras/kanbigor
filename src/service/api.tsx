@@ -11,7 +11,7 @@ export async function getTasks(): Promise<task[]> {
 export async function postTask(newTask: task): Promise<task> {
   const response = await fetch(apiUrl, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(newTask),
   });
 
@@ -26,7 +26,7 @@ export async function postTask(newTask: task): Promise<task> {
 export async function updateTask(updatedTask: task): Promise<task> {
   const response = await fetch(`${apiUrl}/${updatedTask.id}`, {
     method: "PUT",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedTask),
   });
 
