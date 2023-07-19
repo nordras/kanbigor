@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Task, TaskContainer } from './components/Task/Index'
+import { LoadingTask, Task, TaskContainer } from './components/Task/Index'
 import { task, taskStack } from './types'
 import { deleteTask, getTasks, postTask } from './service/api'
 import { formatCamelCase, splitByStatus } from './utils'
 import Title from 'antd/es/typography/Title';
 import AddTaskModal from './components/AddTask';
+import React from 'react';
 
 interface Dragged {
   task?: task,
@@ -19,8 +20,7 @@ function App() {
 
   const [dragged, setDragged] = useState<Dragged | null>(null);
   const [draggedOver, setDraggedOver] = useState<Dragged | null>(null);
-  const [nextStackKey, setNextStackKey] = useState<String | null>(null);
-
+  const [nextStackKey, setNextStackKey] = useState<String | null | undefined>(null);
 
   // Drag and drop Functions
   const handleDragStart = (stackKey: string, task: task, index: number) => {
@@ -37,8 +37,6 @@ function App() {
       over.index = index
       over.task = task
     }
-
-    console.log(`handle enter over`, over)
 
     setDraggedOver(over);
   };
@@ -89,6 +87,7 @@ function App() {
     }
 
     setStacks(virtStack)
+    setNextStackKey(null)
     setDragged(null)
     setDraggedOver(null)
   };
@@ -135,23 +134,29 @@ function App() {
                 id={key}
                 title={formatCamelCase(key)}
                 loading={loading}
-                // onDragEnter={() => handleDragEnter(null)}
+                nextStackKey={nextStackKey as string | undefined}
                 onDragOver={(event) => handleDragOver(event, key)}
                 onDrop={(event) => handleDrop(event)}
               >
-                {stacks[key as keyof taskStack].map((tdata, index) =>
-                (tdata && <Task
-                  {...tdata}
-                  key={tdata?.id}
-                  onDragEnter={(event) => handleDragEnter(event, key, tdata, index)}
-                  onDragStart={() => handleDragStart(key, tdata, index)}
-                  onDragLeave={handleDragLeave}
-                  handleDelete={removeTask}
-                />)
-                )}
+                {stacks[key as keyof taskStack].map((tdata, index) => {
+                  const isDraggedOverHere = draggedOver && draggedOver.stackKey === key && draggedOver.index === index;
+                  return (
+                    <React.Fragment key={tdata?.id}>
+                      {isDraggedOverHere && <LoadingTask loading={true} />}
+                      <Task
+                        {...tdata}
+                        onDragEnter={(event) => handleDragEnter(event, key, tdata, index)}
+                        onDragStart={() => handleDragStart(key, tdata, index)}
+                        onDragLeave={handleDragLeave}
+                        handleDelete={removeTask}
+                      />
+                    </React.Fragment>
+                  );
+                })}
               </TaskContainer>
             ))
           }
+
 
         </section>
         <section className='flex w-full gap-4 m-4 mb-12'>

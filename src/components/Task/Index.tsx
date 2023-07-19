@@ -1,9 +1,10 @@
 import { Card, Skeleton } from 'antd'
 import Meta from 'antd/es/card/Meta'
 import { task, taskContainer } from '../../types'
+import React from 'react'
 
 export function TaskContainer(props: taskContainer) {
-  const { id, title, children, loading } = props
+  const { id, title, children, nextStackKey, loading } = props
   // const bg = isOver ? 'bg-emerald-100' : 'bg-gray-100'; // ${bg} 
 
   const classes = `dragZone relative w-full sm:w-1/2 md:w-1/2 lg:w-1/4 xl:w-1/4 p-4 rounded-lg text-sky-400 bg-gray-100`
@@ -15,6 +16,11 @@ export function TaskContainer(props: taskContainer) {
     onDragLeave,
     onDrop } = props
 
+  console.log('children', children)
+  console.log(`${id} - ${nextStackKey}`)
+
+  const shouldLoadSkeleton = id === nextStackKey && React.Children.count(children) === 0;
+  const shouldLoadSkeletonAfterChildren = id === nextStackKey && React.Children.count(children) !== 0
   return (
     <section id={id} className={classes}
       onDragEnter={onDragEnter}
@@ -23,7 +29,8 @@ export function TaskContainer(props: taskContainer) {
       onDrop={onDrop}>
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
       {children}
-      {loading && <LoadingTask loading={loading} />}
+      {(loading || shouldLoadSkeletonAfterChildren || shouldLoadSkeleton) && <LoadingTask loading={true} />}
+
     </section>
   )
 }
@@ -63,7 +70,7 @@ export function Task(props: task) {
   )
 }
 
-function LoadingTask({ loading }: { loading: boolean }) {
+export function LoadingTask({ loading }: { loading: boolean }) {
   return (
     <Card>
       <Skeleton loading={loading} active>

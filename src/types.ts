@@ -30,4 +30,5 @@ export interface taskContainer {
   onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragLeave?: () => void;
   onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
+  nextStackKey?: string;
 }
