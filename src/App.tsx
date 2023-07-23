@@ -20,7 +20,7 @@ function App() {
 
   const [dragged, setDragged] = useState<Dragged | null>(null);
   const [draggedOver, setDraggedOver] = useState<Dragged | null>(null);
-  const [nextStackKey, setNextStackKey] = useState<String | null>(null);
+  const [nextStackKey, setNextStackKey] = useState<string | null>(null);
 
   // Drag and drop Functions
   const handleDragStart = (stackKey: string, task: task, index: number) => {
@@ -42,7 +42,7 @@ function App() {
   };
 
   const handleDragLeave = () => {
-    // setDraggedOver(null); Hello silcen my old friend
+    // setDraggedOver(null); // Hello silence my old friend
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>, key: string) => {
@@ -52,7 +52,7 @@ function App() {
     }
   };
 
-  const handleDrop = (dragged: Dragged | null, draggedOver: Dragged | null, nextStackKey: string | null | undefined, stacks: taskStack): taskStack => {
+  const handleDrop = (dragged: Dragged | null, draggedOver: Dragged | null, nextStackKey: string | null, stacks: taskStack): taskStack => {
 
     // Clone original stacks to avoid mutation
     let clonedStacks: taskStack = JSON.parse(JSON.stringify(stacks));
@@ -158,6 +158,7 @@ function App() {
                     </React.Fragment>
                   );
                 })}
+                {nextStackKey === key && !draggedOver?.task && <LoadingTask loading={true} />}
               </TaskContainer>
             ))
           }
