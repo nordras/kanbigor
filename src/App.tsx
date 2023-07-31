@@ -162,8 +162,6 @@ function App() {
               </TaskContainer>
             ))
           }
-
-
         </section>
         <section className='flex w-full gap-4 m-4 mb-12'>
           <AddTaskModal onTaskAdd={(task) => addTask(task)} />
