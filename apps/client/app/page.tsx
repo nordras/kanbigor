@@ -1,12 +1,11 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Fragment } from 'react';
 import { LoadingTask, Task, TaskContainer } from '@kanbigor/lib'
-import styles from './page.module.css';
 import { taskStack, task } from 'libs/kanbigor/src/types';
 import { deleteTask, getTasks, postTask } from './service/api';
 import { formatCamelCase, splitByStatus } from './utils';
-import React from 'react';
 import Title from 'antd/es/typography/Title';
+
 
 interface Dragged {
   task?: task,
@@ -14,7 +13,8 @@ interface Dragged {
   index?: number
 }
 
-export default async function Index() {
+export default function Index() {
+  const [count, setCount] = useState(0)
 
   const ini: taskStack = { todo: [], inprogres: [], review: [], done: [] }
   const [stacks, setStacks] = useState<taskStack>(ini)
@@ -123,6 +123,7 @@ export default async function Index() {
 
   const containers = useMemo(() => Object.keys(stacks), [stacks])
 
+  console.log('render');
   return (
     <main className="container mx-auto px-4">
       <Title className='text-center mt-2'>Kanbam</Title>
@@ -148,7 +149,7 @@ export default async function Index() {
               {stacks[key as keyof taskStack].map((tdata, index) => {
                 const isDraggedOverHere = draggedOver && draggedOver.stackKey === key && draggedOver.index === index;
                 return (
-                  <React.Fragment key={tdata?.id}>
+                  <Fragment key={tdata?.id}>
                     {isDraggedOverHere && <LoadingTask loading={true} />}
                     <Task
                       {...tdata}
@@ -157,7 +158,7 @@ export default async function Index() {
                       onDragLeave={handleDragLeave}
                       handleDelete={removeTask}
                     />
-                  </React.Fragment>
+                  </Fragment>
                 );
               })}
               {nextStackKey === key && !draggedOver?.task && <LoadingTask loading={true} />}
@@ -165,10 +166,6 @@ export default async function Index() {
           ))
         }
       </section>
-      {/* <section className='flex w-full gap-4 m-4 mb-12'>
-        <AddTaskModal onTaskAdd={(task) => addTask(task)} />
-      </section> */}
     </main>
-  );
+  )
 }
-
