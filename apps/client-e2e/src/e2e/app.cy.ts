@@ -1,6 +1,6 @@
 import { getGreeting } from '../support/app.po';
 
-describe('kanbigor-client', () => {
+describe('client', () => {
   beforeEach(() => cy.visit('/'));
 
   it('should display welcome message', () => {
@@ -8,6 +8,6 @@ describe('kanbigor-client', () => {
     cy.login('my-email@something.com', 'myPassword');
 
     // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains('Welcome kanbigor-client');
+    getGreeting().contains('Welcome client');
   });
 });

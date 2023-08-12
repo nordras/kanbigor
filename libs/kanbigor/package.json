@@ -1,7 +1,8 @@
 {
-  "name": "@kanbigor/lib",
-  "version": "0.0.1",
+  "name": "kanbigor",
+  "version": "0.0.2",
   "dependencies": {},
+  "author": "Igor Paiva Ferreira",
   "main": "./index.js",
   "module": "./index.mjs",
   "typings": "./index.d.ts"
