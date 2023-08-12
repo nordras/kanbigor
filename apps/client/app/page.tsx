@@ -5,6 +5,7 @@ import { taskStack, task } from 'libs/kanbigor/src/types';
 import { deleteTask, getTasks, postTask } from './service/api';
 import { formatCamelCase, splitByStatus } from './utils';
 import Title from 'antd/es/typography/Title';
+import AddTaskModal from 'libs/kanbigor/src/lib/AddTask';
 
 
 interface Dragged {
@@ -165,6 +166,9 @@ export default function Index() {
             </TaskContainer>
           ))
         }
+      </section>
+      <section className='flex w-full gap-4 m-4 mb-12'>
+        <AddTaskModal onTaskAdd={(task) => addTask(task)} />
       </section>
     </main>
   )
