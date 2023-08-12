@@ -5,5 +5,10 @@
   "author": "Igor Paiva Ferreira",
   "main": "./index.js",
   "module": "./index.mjs",
-  "typings": "./index.d.ts"
+  "typings": "./index.d.ts",
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "18.2.0",
+    "react-is": "18.2.0"
+  }
 }
