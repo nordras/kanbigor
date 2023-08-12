@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { task } from "../../types";
+import { task } from "../../../../../libs/kanbigor/src/types";
 
 interface AddTaskModalProps {
   onTaskAdd: (task: task) => void;

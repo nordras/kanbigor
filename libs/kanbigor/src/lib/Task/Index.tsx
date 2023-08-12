@@ -1,7 +1,7 @@
 import { Card, Skeleton } from 'antd'
 import Meta from 'antd/es/card/Meta'
 import { task, taskContainer } from '../../types'
-import React from 'react'
+import { Children } from 'react'
 
 export function TaskContainer(props: taskContainer) {
   const { id, title, children, nextStackKey, loading } = props
@@ -16,7 +16,7 @@ export function TaskContainer(props: taskContainer) {
     onDragLeave,
     onDrop } = props
 
-  const shouldLoadSkeleton = id === nextStackKey && React.Children.count(children) === 0;
+  const shouldLoadSkeleton = id === nextStackKey && Children.count(children) === 0;
   return (
     <section id={id} className={classes}
       onDragEnter={onDragEnter}

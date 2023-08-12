@@ -5,7 +5,7 @@ import { taskStack, task } from 'libs/kanbigor/src/types';
 import { deleteTask, getTasks, postTask } from './service/api';
 import { formatCamelCase, splitByStatus } from './utils';
 import Title from 'antd/es/typography/Title';
-import AddTaskModal from 'libs/kanbigor/src/lib/AddTask';
+import AddTaskModal from 'apps/client/app/components/AddTask';
 
 
 interface Dragged {
