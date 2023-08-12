@@ -14,10 +14,6 @@
     "styled-components": "5.3.6",
     "tslib": "^2.3.0"
   },
-  "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "18.2.0"
-  },
   "devDependencies": {
     "@nx/cypress": "16.6.0",
     "@nx/eslint-plugin": "16.6.0",
